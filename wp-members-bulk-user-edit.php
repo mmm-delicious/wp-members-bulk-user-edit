@@ -1,11 +1,16 @@
 <?php
 /**
- Plugin Name: WP-Members Bulk User Edit
- Description: Allows for upload of csv to bulk delete users from WP-Members
- * Version: 1.0
+ * Plugin Name: WP-Members Bulk User Edit
+ * Description: Allows for upload of csv to bulk delete users from WP-Members
+ * Version: 1.1
  * Author: MMM Delicious
  * Developer: Mark McDonnell
+ * Requires at least: 5.0
+ * Requires PHP: 7.4
+ * Tested up to: 6.7
  */
+
+defined( 'ABSPATH' ) || exit;
 
 add_action('admin_menu', function() {
     add_users_page(
@@ -23,11 +28,13 @@ function render_bulk_user_admin_page() {
         <h1>Bulk Edit/Delete Users</h1>
         <form method="post" enctype="multipart/form-data">
             <input type="file" name="csv_file" accept=".csv" required>
+            <?php wp_nonce_field( 'bulk_user_csv_upload', 'bulk_user_nonce' ); ?>
             <?php submit_button('Upload CSV'); ?>
         </form>
 
         <?php
         if (!empty($_FILES['csv_file']['tmp_name'])) {
+            check_admin_referer( 'bulk_user_csv_upload', 'bulk_user_nonce' );
             $csv = array_map('str_getcsv', file($_FILES['csv_file']['tmp_name']));
             $headers = array_map('trim', $csv[0]); // Already trims spaces
             $headers = array_map('strtolower', $headers); // Make headers lowercase
@@ -51,15 +58,15 @@ function render_bulk_user_admin_page() {
                 if ($user) {
                     $edit_url = get_edit_user_link($user->ID);
                     $delete_url = wp_nonce_url(admin_url("users.php?action=delete&user=$user->ID"), 'bulk-users');
-                    echo "<tr>
-                        <td>{$user->ID}</td>
-                        <td>{$user->user_email}</td>
-                        <td>{$user->display_name}</td>
-                        <td>
-                            <a href='$edit_url'>Edit</a> |
-                            <a href='$delete_url' onclick=\"return confirm('Are you sure you want to delete this user?');\">Delete</a>
-                        </td>
-                    </tr>";
+                    echo '<tr>';
+                    echo '<td>' . esc_html( $user->ID ) . '</td>';
+                    echo '<td>' . esc_html( $user->user_email ) . '</td>';
+                    echo '<td>' . esc_html( $user->display_name ) . '</td>';
+                    echo '<td>';
+                    echo '<a href="' . esc_url( $edit_url ) . '">Edit</a> | ';
+                    echo '<a href="' . esc_url( $delete_url ) . '" onclick="return confirm(\'Are you sure you want to delete this user?\');">Delete</a>';
+                    echo '</td>';
+                    echo '</tr>';
                 }
             }
             echo '</tbody></table>';
