@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP-Members Bulk User Edit
  * Description: Allows for upload of csv to bulk delete users from WP-Members
- * Version: 1.1
+ * Version: 1.2
  * Author: MMM Delicious
  * Developer: Mark McDonnell
  * Requires at least: 5.0
@@ -33,8 +33,20 @@ function render_bulk_user_admin_page() {
         </form>
 
         <?php
+        $max_size = 2 * 1024 * 1024; // 2MB
         if (!empty($_FILES['csv_file']['tmp_name'])) {
             check_admin_referer( 'bulk_user_csv_upload', 'bulk_user_nonce' );
+
+            if (!is_uploaded_file($_FILES['csv_file']['tmp_name'])) {
+                echo '<p style="color:red;">Invalid file upload.</p>';
+                return;
+            }
+
+            if ($_FILES['csv_file']['size'] > $max_size) {
+                echo '<p style="color:red;">File too large. Maximum size is 2MB.</p>';
+                return;
+            }
+
             $csv = array_map('str_getcsv', file($_FILES['csv_file']['tmp_name']));
             $headers = array_map('trim', $csv[0]); // Already trims spaces
             $headers = array_map('strtolower', $headers); // Make headers lowercase
