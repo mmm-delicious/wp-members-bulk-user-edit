@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP-Members Bulk User Edit
  * Description: Allows for upload of csv to bulk delete users from WP-Members
- * Version: 1.2.3
+ * Version: 1.2.4
  * Author: MMM Delicious
  * Developer: Mark McDonnell
  * Requires at least: 5.0
@@ -14,11 +14,12 @@ defined( 'ABSPATH' ) || exit;
 
 // Auto-updates via GitHub
 require_once plugin_dir_path(__FILE__) . 'lib/plugin-update-checker/plugin-update-checker.php';
-\YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+$mmm_updater = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
     'https://github.com/mmm-delicious/wp-members-bulk-user-edit/',
     __FILE__,
     'wp-members-bulk-user-edit'
 );
+$mmm_updater->setCheckPeriod(48);
 
 // Bulk delete handler — runs before page render
 add_action('admin_init', function() {
